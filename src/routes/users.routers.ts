@@ -1,7 +1,12 @@
 import { log } from 'console'
 import express from 'express'
-import { loginController, registerController } from '~/controllers/users.controllers'
-import { loginValidator, registerValidator } from '~/middlewares/users.middlewares'
+import { loginController, logoutController, registerController } from '~/controllers/users.controllers'
+import {
+  loginValidator,
+  registerValidator,
+  accessTokenValidator,
+  refreshTokenValidator
+} from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handler'
 //Các đường dẫn của Users
 //dựng userRouter
@@ -42,7 +47,7 @@ const userRouter = express.Router()
 // })
 
 //đăng nhập
-userRouter.post('/login', loginValidator, loginController)
+// userRouter.post('/login', loginValidator, loginController)
 
 //đăng kí
 /*
@@ -59,4 +64,26 @@ body:{
 }
 */
 userRouter.post('/register', registerValidator, wrapAsync(registerController))
+
+/*desc: login
+path: users/login
+method: post
+body:{
+    email: string,
+    password: string
+    }
+*/
+userRouter.post('/login', loginValidator, wrapAsync(loginController))
+
+/*
+desc: logout
+path: users/logout
+method: post
+body:{
+    accessToken: string,
+    refreshToken: string
+
+ */
+userRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController))
+
 export default userRouter

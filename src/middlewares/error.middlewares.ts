@@ -8,7 +8,21 @@
 import { Request, Response, NextFunction } from 'express'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { omit } from 'lodash'
+import { ErrorWithStatus } from '~/models/Error'
 
-export const defaultErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-  res.status(err.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json(omit(err, ['status']))
+export const defaultErrorHandler = (error: any, req: Request, res: Response, next: NextFunction) => {
+  //lỗi từ mọi nguồn đổ về đây đc chia làm 2 dạng error with status và phần còn lại
+  //nếu lỗi có status thì trả về status đó
+  if (error instanceof ErrorWithStatus) {
+    res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json(omit(error, ['status']))
+  } else {
+    //khi error là những lỗi còn lại, có rất nhiều thông tin lạ, ko có status
+    Object.getOwnPropertyNames(error).forEach((key) => {
+      Object.defineProperty(error, key, { enumerable: true })
+    })
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+      errInfor: omit(error, ['stack']) //lấy tất cả thông tin của err trừ stack
+    })
+  }
 }
